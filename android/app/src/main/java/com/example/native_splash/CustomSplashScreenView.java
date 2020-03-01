@@ -20,10 +20,10 @@ import android.widget.ImageView;
 
 public class CustomSplashScreenView extends FrameLayout {
   private static final int ANIMATION_TIME_IN_MILLIS = 1000;
-  private static final float ANIMATION_SCALE = (float)1.5;
-  private ImageView animatedThing;
-  private float destinationTranslationY = 0;
-  private ViewPropertyAnimator animator;
+
+  private ImageView flutterLogo;
+  private float currentScale = 0;
+  private ViewPropertyAnimator scaleAnimator;
   //fade animation
   private float transitionPercentWhenAnimationStarted = 0.0f;
   private float totalTransitionPercent = 0.0f;
@@ -35,10 +35,10 @@ public class CustomSplashScreenView extends FrameLayout {
     @Override
     public void onAnimationEnd(Animator animation) {
       animation.removeAllListeners();
-      if (destinationTranslationY <= 1 ) {
-        animateTheThing((float)1.5);
+      if (currentScale <= 1 ) {
+        animateFlutterLogo((float)1.5);
       } else {
-        animateTheThing((float)1);
+        animateFlutterLogo((float)1);
       }
     }
 
@@ -53,24 +53,24 @@ public class CustomSplashScreenView extends FrameLayout {
   public CustomSplashScreenView(Context context) {
     super(context);
     setBackgroundColor(Color.parseColor("#FFFFFF"));
-    animatedThing = new ImageView(getContext());
-    animatedThing.setImageDrawable(getResources().getDrawable(R.drawable.launch_background, getContext().getTheme()));
-    addView(animatedThing, new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, Gravity.CENTER));
-    animateTheThing((float)1.5);
+    flutterLogo = new ImageView(getContext());
+    flutterLogo.setImageDrawable(getResources().getDrawable(R.drawable.launch_background, getContext().getTheme()));
+    addView(flutterLogo, new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, Gravity.CENTER));
+    animateFlutterLogo((float)1.5);
   }
 
   @SuppressLint("NewApi")
-  private void animateTheThing(float destinationTranslationY) {
-    this.destinationTranslationY = destinationTranslationY;
-    animator = animatedThing
+  private void animateFlutterLogo(float scaleTo) {
+    this.currentScale = scaleTo;
+    scaleAnimator = flutterLogo
         .animate()
-        .scaleX(destinationTranslationY).scaleY(destinationTranslationY)
+        .scaleX(scaleTo).scaleY(scaleTo)
         .setDuration(ANIMATION_TIME_IN_MILLIS/2)
         .setInterpolator(new AccelerateDecelerateInterpolator())
         .setListener(animatorListener);
-    animator.start();
+    scaleAnimator.start();
   }
-  public void transitionToFlutter(@NonNull Runnable onTransitionComplete) {
+  public void animateAway(@NonNull Runnable onTransitionComplete) {
     this.onTransitionComplete = onTransitionComplete;
     fadeAnimator = animate()
         .alpha(0.0f)
@@ -82,15 +82,15 @@ public class CustomSplashScreenView extends FrameLayout {
   private final ValueAnimator.AnimatorUpdateListener animatorUpdateListener = new ValueAnimator.AnimatorUpdateListener() {
    @Override
     public void onAnimationUpdate(ValueAnimator animation) {
-      totalTransitionPercent = transitionPercentWhenAnimationStarted
-          + (animation.getAnimatedFraction() * (1.0f - transitionPercentWhenAnimationStarted));
+      totalTransitionPercent = transitionPercentWhenAnimationStarted + 
+      (animation.getAnimatedFraction() * (1.0f - transitionPercentWhenAnimationStarted));
     }
   };
   @SuppressLint("NewApi")
   @Override
   protected void onDetachedFromWindow() {
-    if (animator != null) {
-      animator.cancel();
+    if (scaleAnimator != null) {
+      scaleAnimator.cancel();
     }
     super.onDetachedFromWindow();
   }
@@ -99,8 +99,6 @@ public class CustomSplashScreenView extends FrameLayout {
   public Bundle saveSplashState() {
     Bundle state = new Bundle();
     state.putFloat("totalTransitionPercent", totalTransitionPercent);
-    state.putFloat("currentTranslationY", animatedThing.getTranslationY());
-    state.putFloat("destinationTranslationY", destinationTranslationY);
     return state;
   }
 
@@ -108,9 +106,6 @@ public class CustomSplashScreenView extends FrameLayout {
     if (bundle != null) {
       transitionPercentWhenAnimationStarted = bundle.getFloat("totalTransitionPercent");
       setAlpha(1.0f - transitionPercentWhenAnimationStarted);
-      this.destinationTranslationY = bundle.getFloat("destinationTranslationY");
-      this.animatedThing.setTranslationY(bundle.getFloat("currentTranslationY"));
-      animateTheThing(destinationTranslationY);
     } 
   }
 }

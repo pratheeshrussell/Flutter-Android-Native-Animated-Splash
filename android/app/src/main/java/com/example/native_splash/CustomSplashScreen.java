@@ -21,7 +21,7 @@ public class CustomSplashScreen implements SplashScreen {
 
   public void transitionToFlutter(Runnable onTransitionComplete) {
     if (splashView != null) {
-      splashView.transitionToFlutter(onTransitionComplete);
+      splashView.animateAway(onTransitionComplete);
     } else {
       onTransitionComplete.run();
     }

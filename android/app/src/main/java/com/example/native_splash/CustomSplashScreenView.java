@@ -1,3 +1,4 @@
+//android\app\src\main\java\com\example\native_splash\CustomSplashScreenView.java
 package com.example.native_splash;
 
 import android.animation.Animator;
@@ -6,12 +7,11 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewPropertyAnimator;
-import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,27 +19,27 @@ import android.animation.ValueAnimator;
 import android.widget.ImageView;
 
 public class CustomSplashScreenView extends FrameLayout {
-  private static final int ANIMATION_TIME_IN_MILLIS = 1000;
-
+  //rotate animation variables
+  private static final int ANIMATION_TIME_IN_MILLIS = 800;
   private ImageView flutterLogo;
-  private float currentScale = 0;
-  private ViewPropertyAnimator scaleAnimator;
-  //fade animation
+  private float rotateAngle = 360;
+  private ViewPropertyAnimator rotateAnimator;
+  //fade animation variables
+  private static final int TRANSITION_TIME_IN_MILLIS = 1000;
   private float transitionPercentWhenAnimationStarted = 0.0f;
   private float totalTransitionPercent = 0.0f;
   private Runnable onTransitionComplete;
   private ViewPropertyAnimator fadeAnimator;
 
-  private final Animator.AnimatorListener animatorListener = new AnimatorListenerAdapter() {
+
+// Listener for rotateAnimator for event onAnimationEnd and onAnimationCancel
+  private final Animator.AnimatorListener rotateAnimatorListener = new AnimatorListenerAdapter() {
     @SuppressLint("NewApi")
     @Override
     public void onAnimationEnd(Animator animation) {
       animation.removeAllListeners();
-      if (currentScale <= 1 ) {
-        animateFlutterLogo((float)1.5);
-      } else {
-        animateFlutterLogo((float)1);
-      }
+      rotateAngle = rotateAngle + 360;
+      animateFlutterLogo();
     }
 
     @SuppressLint("NewApi")
@@ -49,6 +49,25 @@ public class CustomSplashScreenView extends FrameLayout {
     }
   };
 
+//update Listener for transittion animator
+   private final ValueAnimator.AnimatorUpdateListener transitionAnimatorUpdateListener = new ValueAnimator.AnimatorUpdateListener() {
+   @Override
+    public void onAnimationUpdate(ValueAnimator animation) {
+      totalTransitionPercent = transitionPercentWhenAnimationStarted + 
+      (animation.getAnimatedFraction() * (1.0f - transitionPercentWhenAnimationStarted));
+    }
+  };
+  private final  Animator.AnimatorListener transitionAnimatorListener = new AnimatorListenerAdapter() {
+   @Override
+    public void onAnimationEnd(Animator animation) {
+      animation.removeAllListeners();
+      if (onTransitionComplete != null) {
+        onTransitionComplete.run();
+      }
+    }
+  };
+
+//main function
   @SuppressLint("NewApi")
   public CustomSplashScreenView(Context context) {
     super(context);
@@ -56,45 +75,40 @@ public class CustomSplashScreenView extends FrameLayout {
     flutterLogo = new ImageView(getContext());
     flutterLogo.setImageDrawable(getResources().getDrawable(R.drawable.launch_background, getContext().getTheme()));
     addView(flutterLogo, new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, Gravity.CENTER));
-    animateFlutterLogo((float)1.5);
+    animateFlutterLogo();
   }
 
+//rotation animation
   @SuppressLint("NewApi")
-  private void animateFlutterLogo(float scaleTo) {
-    this.currentScale = scaleTo;
-    scaleAnimator = flutterLogo
-        .animate()
-        .scaleX(scaleTo).scaleY(scaleTo)
-        .setDuration(ANIMATION_TIME_IN_MILLIS/2)
-        .setInterpolator(new AccelerateDecelerateInterpolator())
-        .setListener(animatorListener);
-    scaleAnimator.start();
+  private void animateFlutterLogo() {
+    rotateAnimator = flutterLogo
+        .animate().rotation(rotateAngle).setDuration(ANIMATION_TIME_IN_MILLIS)
+        .setInterpolator(new LinearInterpolator())
+        .setListener(rotateAnimatorListener);
+    rotateAnimator.start();
   }
+
+//transition animation
   public void animateAway(@NonNull Runnable onTransitionComplete) {
     this.onTransitionComplete = onTransitionComplete;
     fadeAnimator = animate()
         .alpha(0.0f)
-        .setDuration(Math.round(ANIMATION_TIME_IN_MILLIS * (1.0 - totalTransitionPercent)))
-        .setUpdateListener(animatorUpdateListener)
-        .setListener(animatorListener);
+        .setDuration(Math.round(TRANSITION_TIME_IN_MILLIS * (1.0 - totalTransitionPercent)))
+        .setUpdateListener(transitionAnimatorUpdateListener)
+        .setListener(transitionAnimatorListener);
     fadeAnimator.start();
   }
-  private final ValueAnimator.AnimatorUpdateListener animatorUpdateListener = new ValueAnimator.AnimatorUpdateListener() {
-   @Override
-    public void onAnimationUpdate(ValueAnimator animation) {
-      totalTransitionPercent = transitionPercentWhenAnimationStarted + 
-      (animation.getAnimatedFraction() * (1.0f - transitionPercentWhenAnimationStarted));
-    }
-  };
+ 
   @SuppressLint("NewApi")
   @Override
   protected void onDetachedFromWindow() {
-    if (scaleAnimator != null) {
-      scaleAnimator.cancel();
+    if (rotateAnimator != null) {
+      rotateAnimator.cancel();
     }
     super.onDetachedFromWindow();
   }
 
+//state saving
   @Nullable
   public Bundle saveSplashState() {
     Bundle state = new Bundle();

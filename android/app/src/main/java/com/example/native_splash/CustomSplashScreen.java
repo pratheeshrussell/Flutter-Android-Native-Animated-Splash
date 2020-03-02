@@ -18,14 +18,16 @@ public class CustomSplashScreen implements SplashScreen {
     }
     return splashView;
   }
-
+  //closing the splash
   public void transitionToFlutter(Runnable onTransitionComplete) {
     if (splashView != null) {
       splashView.animateAway(onTransitionComplete);
-    } else {
-      onTransitionComplete.run();
     }
+    else {
+      onTransitionComplete.run();
+     }
   }
+  //state saving
   @Override
   public boolean doesSplashViewRememberItsTransition() {
     return true;
@@ -34,7 +36,7 @@ public class CustomSplashScreen implements SplashScreen {
   @Nullable
   public Bundle saveSplashScreenState() {
     if (splashView != null) {
-      return splashView.saveSplashState();
+     return splashView.saveSplashState();
     } else {
       return null;
     }

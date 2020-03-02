@@ -9,13 +9,6 @@ import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.embedding.engine.dart.DartExecutor;
 import io.flutter.view.FlutterMain;
 
-// public class MainActivity extends FlutterActivity {
-//   @Override
-//   public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
-//     GeneratedPluginRegistrant.registerWith(flutterEngine);
-//   }
-// }
-
 
 public class MainActivity extends FlutterActivity {
   private static FlutterEngine flutterEngine;

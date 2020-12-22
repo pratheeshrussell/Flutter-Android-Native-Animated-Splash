@@ -17,7 +17,7 @@ public class MainActivity extends FlutterActivity {
     if (flutterEngine == null) {
       flutterEngine = new FlutterEngine(context);
       flutterEngine.getDartExecutor().executeDartEntrypoint(new DartExecutor.DartEntrypoint(
-          FlutterMain.findAppBundlePath(context), "main"));
+          FlutterMain.findAppBundlePath(), "main"));
     }
     return flutterEngine;
   }
